@@ -1,4 +1,4 @@
-const API_BASE = 'http://15.223.226.34:8000';
+const API_BASE = 'https://astrid-augitic-phoebe.ngrok-free.dev';
 const CONFIDENCE_THRESHOLD = 0.78;
 
 let selectedFile = null;
@@ -80,6 +80,7 @@ async function sendForDetection() {
 
     const resp = await fetch(API_BASE + '/detect', {
       method: 'POST',
+      headers: { 'ngrok-skip-browser-warning': 'true' },
       body: formData
     });
 

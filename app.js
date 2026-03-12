@@ -133,6 +133,31 @@ function handleDetectionResult(data) {
     };
   });
 
+  // Remove duplicates already in confirmed list
+  var existingNames = confirmedItems.map(function(item) { return item.name.toLowerCase(); });
+  var newDetections = detections.filter(function(d) {
+    return existingNames.indexOf(d.name.toLowerCase()) === -1;
+  });
+
+  // Also deduplicate within this batch (keep highest confidence)
+  var seen = {};
+  detections = [];
+  newDetections.forEach(function(d) {
+    var key = d.name.toLowerCase();
+    if (!seen[key] || d.confidence > seen[key].confidence) {
+      seen[key] = d;
+    }
+  });
+  for (var key in seen) {
+    detections.push(seen[key]);
+  }
+
+  if (detections.length === 0) {
+    showToast('All detected items already in your list.');
+    setTimeout(goToUpload, 1500);
+    return;
+  }
+
   reviewIndex = 0;
   showScreen('review');
   renderReviewCard();

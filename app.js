@@ -1,34 +1,46 @@
 const API_BASE = 'https://astrid-augitic-phoebe.ngrok-free.dev';
-const CONFIDENCE_THRESHOLD = 0.78;
+const CONFIDENCE_THRESHOLD = 0.70;
 
-let selectedFile = null;
-let detections = [];
-let reviewIndex = 0;
-let confirmedItems = [];
+var selectedFile = null;
+var detections = [];
+var reviewIndex = 0;
+var confirmedItems = [];
 
 // Navigation
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => {
+  document.querySelectorAll('.screen').forEach(function(s) {
     if (s.classList.contains('active')) {
       s.classList.remove('active');
       s.classList.add('exit');
-      setTimeout(() => s.classList.remove('exit'), 350);
+      setTimeout(function() { s.classList.remove('exit'); }, 350);
     }
   });
-  setTimeout(() => {
+  setTimeout(function() {
     document.getElementById('screen-' + id).classList.add('active');
   }, 50);
 }
 
 function goHome() {
   resetUpload();
+  confirmedItems = [];
   showScreen('home');
 }
 
 function goToUpload() {
   resetUpload();
+  updateUploadBadge();
   showScreen('upload');
+}
+
+function updateUploadBadge() {
+  var badge = document.getElementById('upload-item-count');
+  if (confirmedItems.length > 0) {
+    badge.style.display = 'block';
+    badge.textContent = confirmedItems.length + ' item' + (confirmedItems.length === 1 ? '' : 's') + ' added so far';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 // Upload
@@ -42,11 +54,11 @@ function resetUpload() {
 }
 
 function handleFileSelect(e) {
-  const file = e.target.files[0];
+  var file = e.target.files[0];
   if (!file) return;
   selectedFile = file;
 
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(ev) {
     document.getElementById('preview-img').src = ev.target.result;
     document.getElementById('preview-name').textContent = file.name;
@@ -58,10 +70,10 @@ function handleFileSelect(e) {
 }
 
 // Drag and drop
-const zone = document.getElementById('upload-zone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-zone.addEventListener('drop', e => {
+var zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', function() { zone.classList.remove('dragover'); });
+zone.addEventListener('drop', function(e) {
   e.preventDefault();
   zone.classList.remove('dragover');
   if (e.dataTransfer.files.length) {
@@ -75,10 +87,10 @@ async function sendForDetection() {
   showScreen('processing');
 
   try {
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('file', selectedFile, selectedFile.name);
 
-    const resp = await fetch(API_BASE + '/detect', {
+    var resp = await fetch(API_BASE + '/detect', {
       method: 'POST',
       headers: { 'ngrok-skip-browser-warning': 'true' },
       body: formData
@@ -86,12 +98,12 @@ async function sendForDetection() {
 
     if (!resp.ok) throw new Error('Detection failed');
 
-    const data = await resp.json();
+    var data = await resp.json();
     handleDetectionResult(data);
   } catch (err) {
     console.error(err);
     showToast('Detection failed. Check connection.');
-    setTimeout(goHome, 1500);
+    setTimeout(goToUpload, 1500);
   }
 }
 
@@ -110,17 +122,18 @@ function handleDetectionResult(data) {
 
   if (detections.length === 0) {
     showToast('No equipment detected. Try again.');
-    setTimeout(goHome, 1500);
+    setTimeout(goToUpload, 1500);
     return;
   }
 
-  detections = detections.map(d => ({
-    name: d.name || d.equipment || d.label || d.class_name || d.class || 'Unknown',
-    confidence: d.confidence || d.score || 0
-  }));
+  detections = detections.map(function(d) {
+    return {
+      name: d.name || d.equipment || d.label || d.class_name || d.class || 'Unknown',
+      confidence: d.confidence || d.score || 0
+    };
+  });
 
   reviewIndex = 0;
-  confirmedItems = [];
   showScreen('review');
   renderReviewCard();
 }
@@ -128,14 +141,14 @@ function handleDetectionResult(data) {
 // Review
 
 function renderReviewCard() {
-  const item = detections[reviewIndex];
-  const isConfident = item.confidence >= CONFIDENCE_THRESHOLD;
-  const confPercent = Math.round(item.confidence * 100);
+  var item = detections[reviewIndex];
+  var isConfident = item.confidence >= CONFIDENCE_THRESHOLD;
+  var confPercent = Math.round(item.confidence * 100);
 
   document.getElementById('review-counter').textContent = (reviewIndex + 1) + ' / ' + detections.length;
 
-  const body = document.getElementById('review-body');
-  const actions = document.getElementById('review-actions');
+  var body = document.getElementById('review-body');
+  var actions = document.getElementById('review-actions');
 
   if (isConfident) {
     body.innerHTML =
@@ -180,8 +193,8 @@ function renderReviewCard() {
 }
 
 function toggleEdit() {
-  const section = document.getElementById('edit-section');
-  const link = document.getElementById('edit-link');
+  var section = document.getElementById('edit-section');
+  var link = document.getElementById('edit-link');
   if (section.style.display === 'none') {
     section.style.display = 'block';
     link.textContent = 'Cancel edit';
@@ -193,9 +206,9 @@ function toggleEdit() {
 }
 
 function confirmItem() {
-  const input = document.getElementById('edit-input');
-  const item = detections[reviewIndex];
-  const finalName = input ? input.value.trim() || item.name : item.name;
+  var input = document.getElementById('edit-input');
+  var item = detections[reviewIndex];
+  var finalName = input ? input.value.trim() || item.name : item.name;
 
   confirmedItems.push({ name: finalName, confidence: item.confidence });
   nextReviewItem();
@@ -208,10 +221,37 @@ function removeItem() {
 function nextReviewItem() {
   reviewIndex++;
   if (reviewIndex >= detections.length) {
-    showSummary();
+    showScanChoice();
   } else {
     renderReviewCard();
   }
+}
+
+// After reviewing all detections, show choice: scan more or finish
+
+function showScanChoice() {
+  showScreen('scan-choice');
+  document.getElementById('choice-count').textContent = confirmedItems.length;
+
+  var listEl = document.getElementById('choice-list');
+  var html = '';
+  confirmedItems.forEach(function(item, i) {
+    html +=
+      '<div class="choice-item fade-in-up" style="animation-delay: ' + (i * 0.04) + 's">' +
+        '<div class="choice-item-num">' + (i + 1) + '</div>' +
+        '<span class="choice-item-name">' + item.name + '</span>' +
+        '<span class="choice-item-conf">' + Math.round(item.confidence * 100) + '%</span>' +
+      '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+function scanMore() {
+  goToUpload();
+}
+
+function finishScanning() {
+  showSummary();
 }
 
 // Summary
@@ -220,7 +260,7 @@ function showSummary() {
   showScreen('summary');
   document.getElementById('summary-num').textContent = confirmedItems.length;
 
-  const listEl = document.getElementById('summary-list');
+  var listEl = document.getElementById('summary-list');
 
   if (confirmedItems.length === 0) {
     document.getElementById('summary-subtitle').textContent = 'No items confirmed';
@@ -228,11 +268,11 @@ function showSummary() {
     return;
   }
 
-  document.getElementById('summary-subtitle').textContent = 'Review your confirmed list';
+  document.getElementById('summary-subtitle').textContent = 'Your final equipment list';
 
-  let html = '<h3>Equipment List</h3>';
+  var html = '<h3>Equipment List</h3>';
   confirmedItems.forEach(function(item, i) {
-    const pct = Math.round(item.confidence * 100);
+    var pct = Math.round(item.confidence * 100);
     html +=
       '<div class="summary-item fade-in-up" style="animation-delay: ' + (i * 0.06) + 's">' +
         '<div class="summary-item-num">' + (i + 1) + '</div>' +
@@ -263,7 +303,7 @@ function startOver() {
 // Toast
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 2200);

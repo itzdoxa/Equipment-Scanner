@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Equipment Scanner</title>
+  <title>FitScan</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -20,8 +20,8 @@
         <line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
     </div>
-    <h1>Equipment Scanner</h1>
-    <p>Upload a photo of your gym equipment. We'll detect and catalog everything for you.</p>
+    <h1>FitScan</h1>
+    <p>Upload photos of your gym equipment. We'll detect and catalog everything for you.</p>
     <div class="steps">
       <div class="step">
         <div class="step-icon">
@@ -32,8 +32,8 @@
           </svg>
         </div>
         <div>
-          <div class="step-label">Upload a Photo</div>
-          <div class="step-desc">Select an image of your gym equipment</div>
+          <div class="step-label">Upload Photos</div>
+          <div class="step-desc">Scan equipment one photo at a time</div>
         </div>
       </div>
       <div class="step">
@@ -58,8 +58,8 @@
           </svg>
         </div>
         <div>
-          <div class="step-label">Review & Confirm</div>
-          <div class="step-desc">Verify results and save your list</div>
+          <div class="step-label">Review & Build List</div>
+          <div class="step-desc">Keep scanning until your list is complete</div>
         </div>
       </div>
     </div>
@@ -74,6 +74,7 @@
       <div style="width:36px"></div>
     </div>
     <div class="upload-body">
+      <div class="upload-badge" id="upload-item-count" style="display:none"></div>
       <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -114,11 +115,33 @@
     <div class="review-actions" id="review-actions"></div>
   </div>
 
+  <!-- Scan Choice: add more or done -->
+  <div id="screen-scan-choice" class="screen scan-choice">
+    <div class="choice-top">
+      <div class="choice-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      <h2>Scan Complete</h2>
+      <p><span id="choice-count">0</span> items in your list</p>
+    </div>
+    <div class="choice-list-container">
+      <div class="choice-list" id="choice-list"></div>
+    </div>
+    <div class="choice-actions">
+      <button class="btn btn-primary" onclick="scanMore()">
+        <span class="btn-icon">+</span> Scan More Equipment
+      </button>
+      <button class="btn btn-done" onclick="finishScanning()">Save List</button>
+    </div>
+  </div>
+
   <!-- Summary -->
   <div id="screen-summary" class="screen summary">
     <div class="summary-top">
       <h2>Your Equipment</h2>
-      <p id="summary-subtitle">Review your confirmed list</p>
+      <p id="summary-subtitle">Your final equipment list</p>
     </div>
     <div class="summary-count">
       <div class="num" id="summary-num">0</div>
@@ -127,7 +150,7 @@
     <div class="summary-list" id="summary-list"></div>
     <div class="summary-actions">
       <button class="btn btn-primary" onclick="finish()">Done</button>
-      <button class="btn btn-secondary" onclick="startOver()">Scan Again</button>
+      <button class="btn btn-secondary" onclick="startOver()">Start Over</button>
     </div>
   </div>
 

@@ -114,7 +114,7 @@ function handleDetectionResult(data) {
   }
 
   detections = detections.map(d => ({
-    name: d.name || d.label || d.class_name || d.class || 'Unknown',
+    name: d.name || d.equipment || d.label || d.class_name || d.class || 'Unknown',
     confidence: d.confidence || d.score || 0
   }));
 

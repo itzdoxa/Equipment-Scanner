@@ -97,6 +97,8 @@ async function sendForDetection() {
 function handleDetectionResult(data) {
   if (Array.isArray(data)) {
     detections = data;
+  } else if (data.detected_equipment) {
+    detections = data.detected_equipment;
   } else if (data.detections) {
     detections = data.detections;
   } else if (data.results) {

@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitScan Revamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #09111a;
+      --panel: #141c26;
+      --panel-alt: #1c2633;
+      --line: #223243;
+      --line-strong: #3b9dd9;
+      --text: #ffffff;
+      --muted: #c5ced7;
+      --soft: #8fa0b2;
+      --radius: 20px;
+      --shadow: 0 18px 64px rgba(0, 0, 0, 0.35);
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(59, 157, 217, 0.12), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(28, 38, 51, 0.35), transparent 32%),
+        linear-gradient(180deg, #0a111a 0%, #0d1520 100%);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      min-width: 1120px;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      height: 100vh;
+      padding: 18px;
+    }
+
+    .screen {
+      display: none;
+      height: calc(100vh - 36px);
+      background: rgba(10, 17, 26, 0.96);
+      border: 1px solid rgba(59, 157, 217, 0.12);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar,
+    .footerbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--line);
+      flex: 0 0 auto;
+      background: rgba(8, 14, 22, 0.92);
+    }
+
+    .footerbar {
+      border-bottom: 0;
+      border-top: 1px solid var(--line);
+      margin-top: auto;
+      background: rgba(7, 12, 18, 0.96);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(59, 157, 217, 0.4);
+      background: linear-gradient(180deg, #1d3347 0%, #13212e 100%);
+      color: #3b9dd9;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #3b9dd9;
+      box-shadow: 0 0 0 5px rgba(59, 157, 217, 0.18);
+    }
+
+    .nav-button,
+    .primary-button,
+    .secondary-button,
+    .ghost-button,
+    .remove-button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      padding: 12px 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 10px;
+      font-weight: 700;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      min-height: 42px;
+    }
+
+    .nav-button:hover,
+    .secondary-button:hover,
+    .ghost-button:hover,
+    .remove-button:hover {
+      background: #0e1621;
+      color: #ffffff;
+    }
+
+    .primary-button {
+      background: linear-gradient(90deg, #3b9dd9 0%, #2d84bb 100%);
+      color: #FFFFFF;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(90deg, #57ace0 0%, #3b9dd9 100%);
+    }
+
+    .primary-button:disabled,
+    .secondary-button:disabled,
+    .ghost-button:disabled,
+    .remove-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(420px, 0.98fr);
+      gap: 32px;
+      padding: 26px 24px 24px;
+      align-items: center;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 2px solid var(--line-strong);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.28em;
+      color: var(--soft);
+      font-weight: 700;
+    }
+
+    .hero-copy h1 {
+      margin: 0 0 18px;
+      font-size: clamp(56px, 6.2vw, 92px);
+      line-height: 0.84;
+      letter-spacing: -0.08em;
+    }
+
+    .hero-copy p {
+      max-width: 520px;
+      margin: 0 0 22px;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .protocol-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .protocol-card,
+    .stats-card,
+    .panel,
+    .summary-card,
+    .choice-card,
+    .review-panel,
+    .preview-card {
+      border: 1px solid var(--line);
+      background: rgba(20, 28, 38, 0.92);
+      min-height: 0;
+    }
+
+    .protocol-card {
+      padding: 16px;
+      min-height: 128px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .protocol-number,
+    .meta-label,
+    .mini-label,
+    .mini-link {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--soft);
+      font-weight: 700;
+    }
+
+    .mini-link {
+      color: #7fc2ee;
+      cursor: pointer;
+      display: inline-block;
+      margin-top: 8px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .protocol-card h3,
+    .stats-card strong,
+    .summary-card strong {
+      margin: 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .protocol-card p,
+    .meta-copy,
+    .empty-state,
+    .support-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 0;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+    }
+
+    .visual-frame {
+      position: relative;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #101923;
+      overflow: hidden;
+    }
+
+    .visual-frame img,
+    .image-stage img,
+    .review-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .visual-overlay,
+    .hero-stats {
+      position: absolute;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(10, 17, 26, 0.82);
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+
+    .visual-overlay {
+      top: 24px;
+      left: 24px;
+      padding: 14px;
+      width: 196px;
+    }
+
+    .hero-stats {
+      bottom: 24px;
+      left: 24px;
+      display: flex;
+      gap: 18px;
+      padding: 18px 20px;
+    }
+
+    .metric-value {
+      display: block;
+      margin-top: 4px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .upload-layout,
+    .review-layout,
+    .summary-layout,
+    .choice-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.82fr);
+      gap: 24px;
+      padding: 22px 24px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .stage-shell {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .progress-rail {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      flex: 0 0 auto;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.35;
+    }
+
+    .progress-step.active {
+      opacity: 1;
+    }
+
+    .step-index {
+      min-width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      background: #102031;
+      border: 1px solid var(--line);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    .progress-step.active .step-index {
+      background: linear-gradient(90deg, #3b9dd9 0%, #2d84bb 100%);
+      color: #08111a;
+      border-color: #3b9dd9;
+    }
+
+    .step-text {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+    }
+
+    .upload-zone {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 280px;
+      border: 2px dashed var(--line-strong);
+      background:
+        radial-gradient(circle at top, rgba(59, 157, 217, 0.12), transparent 38%),
+        linear-gradient(180deg, #162230 0%, #121c28 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .upload-zone.dragover {
+      background:
+        radial-gradient(circle at top, rgba(59, 157, 217, 0.22), transparent 38%),
+        linear-gradient(180deg, #1a2a3c 0%, #15212e 100%);
+    }
+
+    .corner {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: #54b2ea;
+      border-style: solid;
+    }
+
+    .corner.top-left {
+      top: 16px;
+      left: 16px;
+      border-width: 2px 0 0 2px;
+    }
+
+    .corner.top-right {
+      top: 16px;
+      right: 16px;
+      border-width: 2px 2px 0 0;
+    }
+
+    .corner.bottom-left {
+      bottom: 16px;
+      left: 16px;
+      border-width: 0 0 2px 2px;
+    }
+
+    .corner.bottom-right {
+      right: 16px;
+      bottom: 16px;
+      border-width: 0 2px 2px 0;
+    }
+
+    .scanner-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: rgba(59, 157, 217, 0.5);
+      animation: scan 3s linear infinite;
+    }
+
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: calc(100% - 2px); }
+    }
+
+    .upload-zone svg,
+    .choice-icon svg {
+      width: 42px;
+      height: 42px;
+      stroke: var(--text);
+      fill: none;
+      stroke-width: 1.6;
+    }
+
+    .upload-zone h2,
+    .sidebar-title,
+    .processing-copy h2,
+    .summary-header h1,
+    .review-copy h2,
+    .choice-copy h2 {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+      line-height: 0.92;
+    }
+
+    .upload-zone h2,
+    .processing-copy h2,
+    .review-copy h2,
+    .choice-copy h2 {
+      font-size: 40px;
+    }
+
+    .sidebar-title {
+      font-size: 42px;
+    }
+
+    .upload-zone p,
+    .sidebar-copy,
+    .processing-copy p,
+    .review-copy p,
+    .choice-copy p,
+    .summary-header p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .upload-preview {
+      display: none;
+      gap: 16px;
+      padding: 16px;
+      min-height: 280px;
+      align-items: stretch;
+      flex: 1 1 auto;
+      overflow: hidden;
+      background: rgba(10, 17, 26, 0.58);
+      border: 1px solid var(--line);
+    }
+
+    .upload-preview.visible {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+    }
+
+    .image-stage,
+    .review-image {
+      border: 1px solid var(--line-strong);
+      background: #102031;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .preview-meta,
+    .sidebar-stack,
+    .review-copy,
+    .processing-copy,
+    .choice-copy,
+    .summary-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .meta-block {
+      padding: 16px;
+    }
+
+    .meta-value {
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.18;
+      word-break: break-word;
+    }
+
+    .upload-badge {
+      display: none;
+      align-self: flex-start;
+      padding: 8px 12px;
+      border: 1px solid #2d4256;
+      background: var(--panel);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+    }
+
+    .upload-badge.visible {
+      display: inline-flex;
+    }
+
+    .hidden-input {
+      display: none;
+    }
+
+    .processing-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px 24px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .spinner-stage {
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .spinner-stage h2 {
+      margin: 0;
+      font-size: 40px;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+      line-height: 0.92;
+    }
+
+    .spinner-ring {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 5px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .spinner-ring::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 5px solid transparent;
+      border-top-color: #3b9dd9;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .review-stage,
+    .summary-list,
+    .choice-list {
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .review-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 16px;
+    }
+
+    .review-panel {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .review-counter {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      background: #101923;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .confidence-bar {
+      height: 8px;
+      background: #223243;
+      overflow: hidden;
+      margin: 8px 0 10px;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b9dd9 0%, #7cc8f1 100%);
+    }
+
+    .confidence-fill.low {
+      background: #70849a;
+    }
+
+    .edit-input {
+      width: 100%;
+      border: 0;
+      border-bottom: 2px solid #3b9dd9;
+      background: transparent;
+      color: #fff;
+      padding: 10px 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .review-actions,
+    .choice-actions,
+    .summary-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .review-actions button,
+    .choice-actions button,
+    .summary-actions button {
+      flex: 1;
+    }
+
+    .choice-list,
+    .summary-list {
+      border-top: 1px solid var(--line-strong);
+      background: rgba(16, 25, 35, 0.94);
+      padding: 0 16px;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      text-transform: uppercase;
+    }
+
+    .list-row strong {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+    }
+
+    .list-row span,
+    .list-row small {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--soft);
+      font-weight: 700;
+    }
+
+    .summary-card,
+    .choice-card,
+    .stats-card {
+      padding: 16px;
+    }
+
+    .summary-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .summary-header h1 {
+      font-size: clamp(52px, 5.2vw, 78px);
+    }
+
+    .choice-icon {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      background: linear-gradient(180deg, #3b9dd9 0%, #2d84bb 100%);
+      color: #08111a;
+      flex: 0 0 auto;
+    }
+
+    .edit-block.hidden {
+      display: none;
+    }
+
+    .empty-state {
+      padding: 18px 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      padding: 12px 16px;
+      background: #0b131d;
+      color: #fff;
+      border: 1px solid rgba(59, 157, 217, 0.24);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 10px;
+      font-weight: 700;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 50;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .support-copy a {
+      color: #9ed2f2;
+    }
+
+    @media (max-width: 1200px) {
+      body {
+        min-width: 0;
+        overflow: auto;
+      }
+
+      .app-shell {
+        height: auto;
+      }
+
+      .screen {
+        height: auto;
+        overflow: visible;
+      }
+
+      .hero-layout,
+      .upload-layout,
+      .review-layout,
+      .summary-layout,
+      .choice-layout,
+      .processing-layout,
+      .review-stage,
+      .upload-preview.visible,
+      .protocol-grid,
+      .summary-grid,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <div id="screen-home" class="screen active">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">FS</div>
+          <div>FitScan Scanner</div>
+        </div>
+        <div class="status">
+          <span>System Status</span>
+          <span class="status-dot"></span>
+          <span>Online</span>
+        </div>
+      </header>
+
+      <main class="hero-layout">
+        <section class="hero-copy">
+          <span class="eyebrow">Industrial Vision v1.0</span>
+          <h1>FIT<br>SCAN</h1>
+          <p>Upload photos of your gym equipment. We'll detect and catalog everything for you.</p>
+          <div class="hero-actions">
+            <button class="primary-button" onclick="goToUpload()">Start Scanning</button>
+          </div>
+          <div class="protocol-grid">
+            <article class="protocol-card">
+              <div class="protocol-number">01</div>
+              <div>
+                <h3>Upload Photos</h3>
+                <p>Scan equipment one photo at a time.</p>
+              </div>
+            </article>
+            <article class="protocol-card">
+              <div class="protocol-number">02</div>
+              <div>
+                <h3>AI Detection</h3>
+                <p>Our model identifies each piece of equipment.</p>
+              </div>
+            </article>
+            <article class="protocol-card">
+              <div class="protocol-number">03</div>
+              <div>
+                <h3>Review & Build List</h3>
+                <p>Keep scanning until your list is complete.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="hero-visual">
+          <div class="visual-frame">
+            <img src="images/gym.jpg" alt="Gym equipment">
+          </div>
+          <div class="hero-stats">
+            <div>
+              <div class="mini-label">Accuracy</div>
+              <span class="metric-value">80%</span>
+            </div>
+            <div>
+              <div class="mini-label">Latency</div>
+              <span class="metric-value">42ms</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footerbar">
+        <div class="mini-label">FitScan Equipment Scanner</div>
+        <div class="mini-label">© 2026 FITSCAN EQUIPMENT SCANNER. ALL RIGHTS RESERVED.</div>
+      </footer>
+    </div>
+
+    <div id="screen-upload" class="screen">
+      <header class="topbar">
+        <button class="nav-button" onclick="goHome()">Exit Scanner</button>
+        <div class="status">
+          <span>Capture Phase</span>
+          <span class="status-dot"></span>
+          <span>Ready</span>
+        </div>
+      </header>
+
+      <main class="upload-layout">
+        <section class="stage-shell">
+          <div class="progress-rail">
+            <div class="progress-step active">
+              <div class="step-index">01</div>
+              <div class="step-text">Upload Photos</div>
+            </div>
+            <div class="progress-step">
+              <div class="step-index">02</div>
+              <div class="step-text">AI Detection</div>
+            </div>
+            <div class="progress-step">
+              <div class="step-index">03</div>
+              <div class="step-text">Review & Build List</div>
+            </div>
+          </div>
+
+          <div id="upload-zone" class="upload-zone" onclick="triggerFileInput()">
+            <div class="scanner-line"></div>
+            <div class="corner top-left"></div>
+            <div class="corner top-right"></div>
+            <div class="corner bottom-left"></div>
+            <div class="corner bottom-right"></div>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.66-.89l.82-1.21A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.66.89l.82 1.21A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"></path>
+              <path d="M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0"></path>
+            </svg>
+            <h2>Initialize Image Upload</h2>
+            <p>Tap to select photo (JPG or PNG) or drag/drop</p>
+          </div>
+
+          <div id="upload-preview" class="upload-preview preview-card">
+            <div class="image-stage">
+              <img id="preview-img" src="" alt="Selected equipment photo">
+            </div>
+            <aside class="preview-meta">
+              <div class="meta-block panel">
+                <div class="meta-label">Selected File</div>
+                <div id="preview-name" class="meta-value">-</div>
+              </div>
+              <div class="meta-block panel">
+                <div class="meta-label">Detection Mode</div>
+                <div class="meta-value">Single Image</div>
+                <p class="meta-copy">The next step sends this image to the existing detection endpoint.</p>
+              </div>
+              <button class="secondary-button" onclick="triggerFileInput()">Change Image</button>
+              <button class="ghost-button" onclick="resetUpload()">Clear</button>
+            </aside>
+          </div>
+
+          <input class="hidden-input" type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+        </section>
+
+        <aside class="sidebar-stack">
+          <div class="upload-badge" id="upload-item-count"></div>
+          <div class="meta-block panel">
+            <div class="meta-label">Scanner Control</div>
+            <h2 class="sidebar-title">Image<br>Upload</h2>
+            <p class="sidebar-copy">Our model identifies each piece of gym equipment. Scan items one photo at a time for maximum cataloging accuracy.</p>
+          </div>
+          <div class="stats-grid">
+            <div class="stats-card">
+              <div class="mini-label">Accepted</div>
+              <strong>JPG / PNG</strong>
+            </div>
+            <div class="stats-card">
+              <div class="mini-label">Review Queue</div>
+              <strong id="queue-size">00</strong>
+            </div>
+          </div>
+          <button class="primary-button" id="btn-detect" disabled onclick="sendForDetection()">Detect Equipment</button>
+        </aside>
+      </main>
+
+      <footer class="footerbar">
+        <div class="mini-label">Mode: Image Acquisition</div>
+        <div class="mini-label">Awaiting Image</div>
+      </footer>
+    </div>
+
+    <div id="screen-processing" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">FS</div>
+        </div>
+        <div class="status">
+          <span>System Status</span>
+          <span class="status-dot"></span>
+          <span>Busy</span>
+        </div>
+      </header>
+
+      <main class="processing-layout">
+        <section class="spinner-stage">
+          <div class="spinner-ring"></div>
+          <h2>Analyzing...</h2>
+        </section>
+      </main>
+
+      <footer class="footerbar">
+        <div class="mini-label">Mode: Equipment Recognition</div>
+        <div class="mini-label">Awaiting Response</div>
+      </footer>
+    </div>
+
+    <div id="screen-review" class="screen">
+      <header class="topbar">
+        <button class="nav-button" onclick="goToUpload()">New Scan</button>
+        <div class="review-counter" id="review-counter">1 / 1</div>
+      </header>
+
+      <main class="review-layout">
+        <section class="stage-shell">
+          <div class="progress-rail">
+            <div class="progress-step">
+              <div class="step-index">01</div>
+              <div class="step-text">Upload Photos</div>
+            </div>
+            <div class="progress-step">
+              <div class="step-index">02</div>
+              <div class="step-text">AI Detection</div>
+            </div>
+            <div class="progress-step active">
+              <div class="step-index">03</div>
+              <div class="step-text">Review & Build List</div>
+            </div>
+          </div>
+
+          <div class="review-stage" id="review-body"></div>
+        </section>
+
+        <aside class="review-copy">
+          <div class="meta-block panel">
+            <div class="meta-label">Review Queue</div>
+            <h2>Detection<br>Review</h2>
+          </div>
+          <div class="summary-card">
+            <div class="mini-label">Confirmed So Far</div>
+            <strong id="review-confirmed-count">00</strong>
+            <p class="meta-copy">Confirmed items are carried into the final list and shown in the summary screen.</p>
+          </div>
+          <div class="review-actions" id="review-actions"></div>
+        </aside>
+      </main>
+
+      <footer class="footerbar">
+        <div class="mini-label">Mode: Manual Confirmation</div>
+        <div class="mini-label">Awaiting Confirmation</div>
+      </footer>
+    </div>
+
+    <div id="screen-scan-choice" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">FS</div>
+        </div>
+        <div class="status">
+          <span>Queue Closed</span>
+          <span class="status-dot"></span>
+          <span>Ready</span>
+        </div>
+      </header>
+
+      <main class="choice-layout">
+        <section class="choice-copy">
+          <span class="eyebrow">Review Complete</span>
+          <h2>Scan<br>Complete</h2>
+          <p><span id="choice-count">0</span> confirmed item(s) are currently in your list. You can continue scanning or finalize the manifest.</p>
+          <div class="choice-actions">
+            <button class="primary-button" onclick="scanMore()">Scan More Equipment</button>
+            <button class="secondary-button" id="finish-scan-button" onclick="finishScanning()">Save List</button>
+          </div>
+        </section>
+
+        <aside class="choice-card">
+          <div class="meta-label">Current List</div>
+          <div class="choice-list" id="choice-list"></div>
+        </aside>
+      </main>
+
+      <footer class="footerbar">
+        <div class="mini-label">Mode: Continue Or Finalize</div>
+        <div class="mini-label">Awaiting Selection</div>
+      </footer>
+    </div>
+
+    <div id="screen-summary" class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">FS</div>
+        </div>
+        <div class="status">
+          <span>Database</span>
+          <span class="status-dot"></span>
+          <span>Synchronized</span>
+        </div>
+      </header>
+
+      <main class="summary-layout">
+        <section class="summary-stack">
+          <div class="summary-header">
+            <span class="eyebrow">Session Summary</span>
+            <h1>Your<br>Equipment</h1>
+            <p id="summary-subtitle">Your confirmed equipment list from this scan session.</p>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="mini-label">Items Saved</div>
+              <strong id="summary-num">00</strong>
+            </div>
+            <div class="summary-card">
+              <div class="mini-label">Session Type</div>
+              <strong>Manual Review</strong>
+            </div>
+          </div>
+          <div class="summary-actions">
+            <button class="primary-button" onclick="finish()">Done</button>
+            <button class="secondary-button" onclick="startOver()">Start Over</button>
+          </div>
+        </section>
+
+        <aside class="choice-card">
+          <div class="meta-label">Equipment List</div>
+          <div class="summary-list" id="summary-list"></div>
+        </aside>
+      </main>
+
+      <footer class="footerbar">
+        <div class="mini-label">Mode: Summary</div>
+        <div class="mini-label">Read Only</div>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API_BASE = 'http://3.99.235.123:8000';
+    const CONFIDENCE_THRESHOLD = 0.70;
+
+    var selectedFile = null;
+    var selectedImageDataUrl = '';
+    var detections = [];
+    var reviewIndex = 0;
+    var confirmedItems = [];
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(function(screen) {
+        screen.classList.remove('active');
+      });
+
+      var target = document.getElementById('screen-' + id);
+      if (target) {
+        target.classList.add('active');
+      }
+    }
+
+    function triggerFileInput() {
+      document.getElementById('file-input').click();
+    }
+
+    function goHome() {
+      resetUpload();
+      confirmedItems = [];
+      updateUploadBadge();
+      updateQueueSize();
+      showScreen('home');
+    }
+
+    function goToUpload() {
+      resetUpload();
+      updateUploadBadge();
+      updateQueueSize();
+      showScreen('upload');
+    }
+
+    function updateUploadBadge() {
+      var badge = document.getElementById('upload-item-count');
+      if (confirmedItems.length > 0) {
+        badge.textContent = confirmedItems.length + ' item' + (confirmedItems.length === 1 ? '' : 's') + ' added so far';
+        badge.classList.add('visible');
+      } else {
+        badge.textContent = '';
+        badge.classList.remove('visible');
+      }
+    }
+
+    function updateQueueSize() {
+      document.getElementById('queue-size').textContent = String(confirmedItems.length).padStart(2, '0');
+    }
+
+    function resetUpload() {
+      selectedFile = null;
+      selectedImageDataUrl = '';
+      document.getElementById('file-input').value = '';
+      document.getElementById('upload-zone').style.display = 'flex';
+      document.getElementById('upload-preview').classList.remove('visible');
+      document.getElementById('preview-img').src = '';
+      document.getElementById('preview-name').textContent = '-';
+      document.getElementById('btn-detect').disabled = true;
+    }
+
+    function handleFileSelect(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+      selectedFile = file;
+
+      var reader = new FileReader();
+      reader.onload = function(loadEvent) {
+        selectedImageDataUrl = loadEvent.target.result;
+        document.getElementById('preview-img').src = selectedImageDataUrl;
+        document.getElementById('preview-name').textContent = file.name;
+        document.getElementById('upload-zone').style.display = 'none';
+        document.getElementById('upload-preview').classList.add('visible');
+        document.getElementById('btn-detect').disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function sendForDetection() {
+      if (!selectedFile) return;
+      showScreen('processing');
+
+      try {
+        var formData = new FormData();
+        formData.append('file', selectedFile, selectedFile.name);
+
+        var resp = await fetch(API_BASE + '/detect', {
+          method: 'POST',
+          headers: {},
+          body: formData
+        });
+
+        if (!resp.ok) throw new Error('Detection failed');
+
+        var data = await resp.json();
+        handleDetectionResult(data);
+      } catch (err) {
+        console.error(err);
+        showToast('Detection failed. Check connection.');
+        setTimeout(goToUpload, 1500);
+      }
+    }
+
+    function handleDetectionResult(data) {
+      if (Array.isArray(data)) {
+        detections = data;
+      } else if (data.detected_equipment) {
+        detections = data.detected_equipment;
+      } else if (data.detections) {
+        detections = data.detections;
+      } else if (data.results) {
+        detections = data.results;
+      } else {
+        detections = [];
+      }
+
+      if (detections.length === 0) {
+        showToast('No equipment detected. Try again.');
+        setTimeout(goToUpload, 1500);
+        return;
+      }
+
+      detections = detections.map(function(d) {
+        return {
+          name: d.equipment || d.name || d.label || d.class_name || d.class || 'Unknown',
+          confidence: d.confidence || d.score || 0
+        };
+      });
+
+      var existingNames = confirmedItems.map(function(item) {
+        return item.name.toLowerCase();
+      });
+      var newDetections = detections.filter(function(d) {
+        return existingNames.indexOf(d.name.toLowerCase()) === -1;
+      });
+
+      var seen = {};
+      detections = [];
+      newDetections.forEach(function(d) {
+        var key = d.name.toLowerCase();
+        if (!seen[key] || d.confidence > seen[key].confidence) {
+          seen[key] = d;
+        }
+      });
+      for (var key in seen) {
+        detections.push(seen[key]);
+      }
+
+      if (detections.length === 0) {
+        showToast('All detected items already in your list.');
+        setTimeout(goToUpload, 1500);
+        return;
+      }
+
+      reviewIndex = 0;
+      showScreen('review');
+      renderReviewCard();
+    }
+
+    function renderReviewCard() {
+      var item = detections[reviewIndex];
+      var isConfident = item.confidence >= CONFIDENCE_THRESHOLD;
+      var confPercent = Math.round(item.confidence * 100);
+
+      document.getElementById('review-counter').textContent = (reviewIndex + 1) + ' / ' + detections.length;
+      document.getElementById('review-confirmed-count').textContent = String(confirmedItems.length).padStart(2, '0');
+
+      var body = document.getElementById('review-body');
+      var actions = document.getElementById('review-actions');
+
+      body.innerHTML =
+        '<div class="review-image">' +
+          '<img src="' + escapeAttribute(selectedImageDataUrl || '') + '" alt="Uploaded scan image">' +
+        '</div>' +
+        '<div class="review-panel">' +
+          '<div>' +
+            '<div class="meta-label">AI Identification</div>' +
+            '<h2 class="sidebar-title">' + escapeHtml(item.name) + '</h2>' +
+          '</div>' +
+          '<div>' +
+            '<div class="mini-label">Confidence</div>' +
+            '<div class="confidence-bar">' +
+              '<div class="confidence-fill ' + (isConfident ? '' : 'low') + '" style="width: ' + confPercent + '%"></div>' +
+            '</div>' +
+            '<p class="meta-copy">' + confPercent + '% confidence. ' + (isConfident ? 'High confidence result.' : 'Needs review before saving.') + '</p>' +
+          '</div>' +
+          '<div class="summary-card">' +
+            '<div class="mini-label">Detection Source</div>' +
+            '<strong>' + escapeHtml(selectedFile ? selectedFile.name : 'Uploaded file') + '</strong>' +
+            '<p class="meta-copy">Current candidate pulled from the live API response.</p>' +
+          '</div>' +
+          (isConfident
+            ? '<div class="edit-block hidden" id="edit-section">' +
+                '<label class="mini-label" for="edit-input">Correct the name</label>' +
+                '<input class="edit-input" id="edit-input" value="' + escapeAttribute(item.name) + '">' +
+              '</div>' +
+              '<span class="mini-link" id="edit-link" onclick="toggleEdit()">Not right? Edit</span>'
+            : '<div>' +
+                '<label class="mini-label" for="edit-input">Equipment Name</label>' +
+                '<input class="edit-input" id="edit-input" value="' + escapeAttribute(item.name) + '">' +
+              '</div>') +
+        '</div>';
+
+      actions.innerHTML =
+        '<button class="primary-button" onclick="confirmItem()">Confirm</button>' +
+        '<button class="remove-button" onclick="removeItem()">Remove</button>';
+    }
+
+    function toggleEdit() {
+      var section = document.getElementById('edit-section');
+      var link = document.getElementById('edit-link');
+      if (!section || !link) return;
+
+      if (section.classList.contains('hidden')) {
+        section.classList.remove('hidden');
+        link.textContent = 'Cancel edit';
+        document.getElementById('edit-input').focus();
+      } else {
+        section.classList.add('hidden');
+        link.textContent = 'Not right? Edit';
+      }
+    }
+
+    function confirmItem() {
+      var input = document.getElementById('edit-input');
+      var item = detections[reviewIndex];
+      var finalName = input ? input.value.trim() || item.name : item.name;
+
+      confirmedItems.push({ name: finalName, confidence: item.confidence });
+      nextReviewItem();
+    }
+
+    function removeItem() {
+      nextReviewItem();
+    }
+
+    function nextReviewItem() {
+      reviewIndex++;
+      if (reviewIndex >= detections.length) {
+        showScanChoice();
+      } else {
+        renderReviewCard();
+      }
+    }
+
+    function showScanChoice() {
+      showScreen('scan-choice');
+      document.getElementById('choice-count').textContent = confirmedItems.length;
+
+      var listEl = document.getElementById('choice-list');
+      var html = '';
+      confirmedItems.forEach(function(item, index) {
+        html +=
+          '<div class="list-row">' +
+            '<div>' +
+              '<small>#' + (index + 1) + '</small>' +
+              '<strong>' + escapeHtml(item.name) + '</strong>' +
+            '</div>' +
+            '<span>' + Math.round(item.confidence * 100) + '%</span>' +
+          '</div>';
+      });
+      listEl.innerHTML = html || '<p class="empty-state">No items were confirmed from this scan.</p>';
+      document.getElementById('finish-scan-button').disabled = confirmedItems.length === 0;
+      updateUploadBadge();
+      updateQueueSize();
+    }
+
+    function scanMore() {
+      goToUpload();
+    }
+
+    function finishScanning() {
+      showSummary();
+    }
+
+    function showSummary() {
+      showScreen('summary');
+      document.getElementById('summary-num').textContent = String(confirmedItems.length).padStart(2, '0');
+
+      var listEl = document.getElementById('summary-list');
+      if (confirmedItems.length === 0) {
+        document.getElementById('summary-subtitle').textContent = 'No items confirmed';
+        listEl.innerHTML = '<p class="empty-state">No equipment was confirmed. Try scanning again.</p>';
+        return;
+      }
+
+      document.getElementById('summary-subtitle').textContent = 'Your final equipment list';
+
+      var html = '';
+      confirmedItems.forEach(function(item, index) {
+        var pct = Math.round(item.confidence * 100);
+        html +=
+          '<div class="list-row">' +
+            '<div>' +
+              '<small>#' + (index + 1) + '</small>' +
+              '<strong>' + escapeHtml(item.name) + '</strong>' +
+            '</div>' +
+            '<span>' + pct + '% confidence</span>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    }
+
+    function finish() {
+      showToast('Equipment list saved!');
+      setTimeout(goHome, 1200);
+    }
+
+    function startOver() {
+      detections = [];
+      confirmedItems = [];
+      reviewIndex = 0;
+      goToUpload();
+    }
+
+    function showToast(message) {
+      var toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(function() {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value);
+    }
+
+    var zone = document.getElementById('upload-zone');
+    zone.addEventListener('dragover', function(event) {
+      event.preventDefault();
+      zone.classList.add('dragover');
+    });
+    zone.addEventListener('dragleave', function() {
+      zone.classList.remove('dragover');
+    });
+    zone.addEventListener('drop', function(event) {
+      event.preventDefault();
+      zone.classList.remove('dragover');
+      if (event.dataTransfer.files.length) {
+        document.getElementById('file-input').files = event.dataTransfer.files;
+        handleFileSelect({ target: { files: event.dataTransfer.files } });
+      }
+    });
+
+    updateUploadBadge();
+    updateQueueSize();
+  </script>
+</body>
+</html>

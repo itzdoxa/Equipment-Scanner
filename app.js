@@ -1,4 +1,4 @@
-const API_BASE = 'http://3.99.235.123:8000';
+const API_BASE = 'https://35.173.230.180';
 const CONFIDENCE_THRESHOLD = 0.70;
 
 var selectedFile = null;
